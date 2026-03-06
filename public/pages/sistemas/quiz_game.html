@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>¿Quién quiere ser Senior? - UTP GAMES</title>
+    <link rel="stylesheet" href="../../styles.css" />
+    <script src="../../components/sidebar.js" defer></script>
+
+    <style>
+      /* Estructura Base */
+      .app {
+        display: flex;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        background: #080510;
+      }
+
+      .quiz-layout {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        flex: 1;
+        padding: 20px;
+        gap: 20px;
+        height: calc(100% - 85px);
+      }
+
+      /* ==========================================
+       ARENA CENTRAL (PREGUNTAS Y BOTONES)
+       ========================================== */
+      .quiz-arena {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        position: relative;
+      }
+
+      /* Comodines (Lifelines) */
+      .lifelines {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+      }
+      .btn-comodin {
+        background: rgba(13, 8, 26, 0.8);
+        border: 1px solid #c77dff;
+        color: #c77dff;
+        padding: 10px 20px;
+        border-radius: 30px;
+        cursor: pointer;
+        font-family: "Consolas", monospace;
+        font-weight: bold;
+        transition: all 0.3s;
+        box-shadow: 0 0 10px rgba(199, 125, 255, 0.2);
+      }
+      .btn-comodin:hover {
+        background: #c77dff;
+        color: #000;
+        box-shadow: 0 0 20px rgba(199, 125, 255, 0.6);
+      }
+      .btn-comodin.usado {
+        opacity: 0.3;
+        cursor: not-allowed;
+        text-decoration: line-through;
+        border-color: #555;
+        color: #555;
+        box-shadow: none;
+        background: transparent;
+      }
+
+      /* Contenedor de la Pregunta */
+      .question-box {
+        background: rgba(13, 8, 26, 0.95);
+        border: 2px solid #00bcd4;
+        border-radius: 16px;
+        padding: 40px;
+        text-align: center;
+        margin-bottom: 20px;
+        box-shadow: 0 0 30px rgba(0, 188, 212, 0.2);
+        position: relative;
+        min-height: 150px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .question-number {
+        position: absolute;
+        top: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #00bcd4;
+        color: #000;
+        padding: 5px 20px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 14px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+      .question-text {
+        color: #fff;
+        font-size: 24px;
+        font-weight: 500;
+        margin: 0;
+        line-height: 1.4;
+      }
+
+      /* Opciones de Respuesta (Grid 2x2) */
+      .options-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+      }
+      .btn-opcion {
+        background: rgba(13, 8, 26, 0.9);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+        padding: 20px;
+        font-size: 18px;
+        border-radius: 12px;
+        cursor: pointer;
+        text-align: left;
+        transition: all 0.2s;
+        position: relative;
+        overflow: hidden;
+      }
+      .btn-opcion:hover {
+        border-color: #00bcd4;
+        background: rgba(0, 188, 212, 0.1);
+      }
+      .btn-opcion .letra {
+        color: #00bcd4;
+        font-weight: bold;
+        margin-right: 10px;
+      }
+
+      /* Estados de los Botones (Clases inyectadas por JS) */
+      .btn-opcion.seleccionado {
+        border-color: #ffd600;
+        background: rgba(255, 214, 0, 0.2);
+        color: #ffd600;
+        animation: pulseYellow 0.5s infinite alternate;
+      }
+      .btn-opcion.correcta {
+        border-color: #00c853;
+        background: rgba(0, 200, 83, 0.3);
+        color: #00c853;
+      }
+      .btn-opcion.incorrecta {
+        border-color: #ff4d6d;
+        background: rgba(255, 77, 109, 0.3);
+        color: #ff4d6d;
+      }
+
+      @keyframes pulseYellow {
+        from {
+          box-shadow: 0 0 10px rgba(255, 214, 0, 0.2);
+        }
+        to {
+          box-shadow: 0 0 30px rgba(255, 214, 0, 0.6);
+        }
+      }
+
+      /* ==========================================
+       ESCALERA DE RANGO (LADDER LATERAL)
+       ========================================== */
+      .ladder-panel {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+      .ladder-title {
+        color: #888;
+        text-transform: uppercase;
+        font-size: 12px;
+        letter-spacing: 2px;
+        margin-bottom: 15px;
+        text-align: center;
+      }
+
+      .ladder-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column-reverse; /* Para que el nivel 1 quede abajo */
+        gap: 5px;
+      }
+
+      .ladder-step {
+        padding: 8px 15px;
+        border-radius: 6px;
+        color: #666;
+        font-family: "Consolas", monospace;
+        font-size: 14px;
+        display: flex;
+        justify-content: space-between;
+        transition: all 0.3s;
+      }
+      .ladder-step .num {
+        width: 25px;
+        display: inline-block;
+      }
+
+      /* Milestones (Puntos seguros: Junior, Semi-Senior, CTO) */
+      .ladder-step.milestone {
+        color: #fff;
+        font-weight: bold;
+      }
+
+      /* Nivel Actual */
+      .ladder-step.active {
+        background: rgba(0, 200, 83, 0.2);
+        color: #00c853;
+        border-left: 4px solid #00c853;
+        font-weight: bold;
+        transform: scale(1.05);
+        box-shadow: 0 0 15px rgba(0, 200, 83, 0.2);
+      }
+
+      /* Niveles Superados */
+      .ladder-step.passed {
+        color: #00bcd4;
+        opacity: 0.6;
+      }
+
+      /* Pantallas de fin de juego */
+      .game-over-screen,
+      .victory-screen {
+        text-align: center;
+        padding: 50px;
+        background: rgba(0, 0, 0, 0.8);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .timer-wrapper {
+        flex: 1; /* Ocupa todo el espacio disponible en medio */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .quiz-timer-ring {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        background: conic-gradient(
+          #00bcd4 100%,
+          transparent 0
+        ); /* El color cambia vía JS */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 25px rgba(0, 188, 212, 0.3);
+        transition: background 0.2s ease;
+      }
+
+      .quiz-timer-inner {
+        width: 120px;
+        height: 120px;
+        background: #080510; /* Fondo oscuro igual que la app */
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #quiz-timer-text {
+        font-size: 45px;
+        font-weight: bold;
+        font-family: "Consolas", monospace;
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="background"></div>
+    <div class="app">
+      <app-sidebar></app-sidebar>
+
+      <main class="content">
+        <header class="header glass">
+          <h1>
+            Entrevista Técnica:
+            <span id="rango-actual" style="color: #00bcd4">Cargando...</span>
+          </h1>
+        </header>
+
+        <div class="quiz-layout">
+          <div class="quiz-arena" id="juego-arena">
+            <div class="timer-wrapper">
+              <div class="quiz-timer-ring" id="quiz-timer-ring">
+                <div class="quiz-timer-inner">
+                  <span id="quiz-timer-text">10</span>
+                </div>
+              </div>
+            </div>
+            <div class="question-box">
+              <div class="question-number" id="pregunta-numero">
+                Pregunta 1 de 15
+              </div>
+              <h2 class="question-text" id="pregunta-texto">
+                Cargando la base de datos de preguntas...
+              </h2>
+            </div>
+
+            <div class="options-grid" id="opciones-contenedor"></div>
+          </div>
+
+          <div class="ladder-panel">
+            <div class="ladder-title">Escalafón Corporativo</div>
+            <ul class="ladder-list" id="ladder-list"></ul>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="../../js/quiz_questions.js"></script>
+    <script src="../../js/quiz_game.js"></script>
+  </body>
+</html>

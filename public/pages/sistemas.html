@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>UTP GAMES - Sistemas</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <script src="../components/sidebar.js" defer></script>
+    <style>
+      /* Estilos específicos para el grid de 2x2 */
+      .game-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 25px;
+        padding: 10px;
+      }
+      .back-btn {
+        margin-right: 20px;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: white;
+        padding: 10px;
+        border-radius: 50%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="background"></div>
+    <div class="app">
+      <app-sidebar></app-sidebar>
+
+      <main class="content">
+        <header class="header glass">
+          <h1>
+            <span
+              onclick="location.href = '../index.html'"
+              style="cursor: pointer"
+              >🏠</span
+            >
+            Facultad de Sistemas - Selección de Retos
+          </h1>
+        </header>
+
+        <section class="game-grid" id="game-selector">
+          <div class="card glass sistemas">
+            <div class="game-icon">⚡</div>
+            <h3>Debug or Die</h3>
+            <p>Encuentra errores de lógica y sintaxis en tiempo real.</p>
+            <button class="play-btn" onclick="iniciarReto('debug')">
+              Jugar
+            </button>
+          </div>
+
+          <div class="card glass sistemas">
+            <div class="game-icon">🗄️</div>
+            <h3>SQL Knowledge</h3>
+            <p>Prueba tus habilidades en consultas SQL.</p>
+            <button class="play-btn" onclick="iniciarReto('sql')">Jugar</button>
+          </div>
+
+          <div class="card glass sistemas">
+            <div class="game-icon">🛡️</div>
+            <h3>CYBERGUARD</h3>
+            <p>Protege tu red contra amenazas cibernéticas.</p>
+            <button class="play-btn" onclick="iniciarReto('cyber')">
+              Jugar
+            </button>
+          </div>
+
+          <div class="card glass sistemas">
+            <div class="game-icon">🖥️</div>
+            <h3>Quien Quiere Ser Senior</h3>
+            <p>Responde preguntas sobre programacion.</p>
+            <button class="play-btn" onclick="iniciarReto('hardware')">
+              Jugar
+            </button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      function iniciarReto(tipo) {
+        if (tipo === "debug") {
+          // Redirige a la pantalla del editor de código que diseñamos
+          window.location.href = "sistemas/debug_game.html";
+        } else if (tipo === "sql") {
+          window.location.href = "sistemas/sql_game.html";
+        } else if (tipo === "cyber") {
+          window.location.href = "sistemas/cyber_game.html";
+        } else {
+          window.location.href = "sistemas/quiz_game.html";
+        }
+      }
+    </script>
+  </body>
+</html>
