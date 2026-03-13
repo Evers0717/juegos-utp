@@ -13,14 +13,83 @@
         gap: 25px;
         padding: 10px;
       }
-      .back-btn {
-        margin-right: 20px;
-        cursor: pointer;
-        background: rgba(255, 255, 255, 0.1);
-        border: none;
+
+      /* --- ESTILOS DEL MODAL NEÓN --- */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        display: none; /* Se activa por JS */
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        backdrop-filter: blur(10px);
+      }
+
+      .modal-content {
+        width: 450px;
+        padding: 30px;
+        border: 1px solid rgba(0, 188, 212, 0.5);
+        border-radius: 16px;
+        text-align: center;
+        box-shadow: 0 0 30px rgba(0, 188, 212, 0.2);
+      }
+
+      .input-group {
+        text-align: left;
+        margin-top: 20px;
+      }
+
+      .input-group label {
+        color: #00bcd4;
+        font-size: 11px;
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: 8px;
+        letter-spacing: 1px;
+      }
+
+      .input-group input,
+      .input-group select {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 12px;
         color: white;
-        padding: 10px;
-        border-radius: 50%;
+        border-radius: 6px;
+        outline: none;
+        font-family: "Consolas", monospace;
+      }
+
+      .modal-footer {
+        margin-top: 30px;
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+      }
+
+      /* Botón estilo cyber para el modal */
+      .btn-cyber-modal {
+        background: transparent;
+        border: 1px solid #00bcd4;
+        color: #00bcd4;
+        padding: 10px 20px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.3s;
+      }
+
+      .btn-cyber-modal.success {
+        border-color: #00c853;
+        color: #00c853;
+      }
+
+      .btn-cyber-modal:hover {
+        background: rgba(0, 188, 212, 0.1);
+        box-shadow: 0 0 15px rgba(0, 188, 212, 0.4);
       }
     </style>
   </head>
@@ -46,7 +115,7 @@
             <div class="game-icon">⚡</div>
             <h3>Debug or Die</h3>
             <p>Encuentra errores de lógica y sintaxis en tiempo real.</p>
-            <button class="play-btn" onclick="iniciarReto('debug')">
+            <button class="play-btn" onclick="verificarYJugar('debug')">
               Jugar
             </button>
           </div>
@@ -55,14 +124,16 @@
             <div class="game-icon">🗄️</div>
             <h3>SQL Knowledge</h3>
             <p>Prueba tus habilidades en consultas SQL.</p>
-            <button class="play-btn" onclick="iniciarReto('sql')">Jugar</button>
+            <button class="play-btn" onclick="verificarYJugar('sql')">
+              Jugar
+            </button>
           </div>
 
           <div class="card glass sistemas">
             <div class="game-icon">🛡️</div>
             <h3>CYBERGUARD</h3>
             <p>Protege tu red contra amenazas cibernéticas.</p>
-            <button class="play-btn" onclick="iniciarReto('cyber')">
+            <button class="play-btn" onclick="verificarYJugar('cyber')">
               Jugar
             </button>
           </div>
@@ -70,8 +141,8 @@
           <div class="card glass sistemas">
             <div class="game-icon">🖥️</div>
             <h3>Quien Quiere Ser Senior</h3>
-            <p>Responde preguntas sobre programacion.</p>
-            <button class="play-btn" onclick="iniciarReto('hardware')">
+            <p>Responde preguntas sobre programación.</p>
+            <button class="play-btn" onclick="verificarYJugar('quiz')">
               Jugar
             </button>
           </div>
@@ -79,18 +150,102 @@
       </main>
     </div>
 
+    <div id="modal-registro" class="modal-overlay">
+      <div class="modal-content glass">
+        <h2 class="neon-text" style="color: #00bcd4">ACCESO REQUERIDO</h2>
+        <p style="color: #ccc; font-size: 14px">
+          Ingresa tus datos para registrar tu puntaje en el ranking de la UTP.
+        </p>
+
+        <div class="input-group">
+          <label>Nombre del Jugador</label>
+          <input
+            type="text"
+            id="player-name"
+            placeholder="Ej. Ale_Developer"
+            autocomplete="off"
+          />
+          <p
+            id="error-msg"
+            style="
+              color: #ff4d6d;
+              font-size: 11px;
+              margin-top: 5px;
+              display: none;
+            "
+          >
+            ⚠️ El nombre debe tener al menos 3 caracteres.
+          </p>
+        </div>
+
+        <div class="modal-footer">
+          <button onclick="cerrarModal()" class="btn-cyber-modal">
+            CANCELAR
+          </button>
+          <button
+            onclick="registrarYContinuar()"
+            class="btn-cyber-modal success"
+          >
+            CONECTAR
+          </button>
+        </div>
+      </div>
+    </div>
+
     <script>
-      function iniciarReto(tipo) {
-        if (tipo === "debug") {
-          // Redirige a la pantalla del editor de código que diseñamos
-          window.location.href = "sistemas/debug_game.html";
-        } else if (tipo === "sql") {
-          window.location.href = "sistemas/sql_game.html";
-        } else if (tipo === "cyber") {
-          window.location.href = "sistemas/cyber_game.html";
+      let proximoJuego = "";
+      const inputNombre = document.getElementById("player-name");
+      const errorMsg = document.getElementById("error-msg");
+
+      function verificarYJugar(tipo) {
+        proximoJuego = tipo;
+        if (sessionStorage.getItem("activePlayer")) {
+          irAlJuego(tipo);
         } else {
-          window.location.href = "sistemas/quiz_game.html";
+          document.getElementById("modal-registro").style.display = "flex";
+          // Forzamos el foco al abrir para que el usuario pueda escribir de una vez
+          inputNombre.focus();
         }
+      }
+
+      function cerrarModal() {
+        document.getElementById("modal-registro").style.display = "none";
+        errorMsg.style.display = "none"; // Limpiar error
+        inputNombre.value = ""; // Limpiar input
+      }
+
+      function registrarYContinuar() {
+        const nombre = inputNombre.value.trim();
+
+        if (nombre.length < 3) {
+          // En lugar de alert, mostramos el texto rojo y ponemos el borde rojo
+          errorMsg.style.display = "block";
+          inputNombre.style.borderColor = "#ff4d6d";
+          inputNombre.focus(); // Devolvemos el cursor al input
+          return;
+        }
+
+        // Si es válido, guardamos y avanzamos
+        sessionStorage.setItem("activePlayer", nombre);
+        irAlJuego(proximoJuego);
+      }
+
+      // Bonus: Si presiona "Enter" también valida
+      inputNombre.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") registrarYContinuar();
+        // Ocultar error mientras escribe
+        errorMsg.style.display = "none";
+        inputNombre.style.borderColor = "rgba(255, 255, 255, 0.2)";
+      });
+
+      function irAlJuego(tipo) {
+        const paths = {
+          debug: "sistemas/debug_game.html",
+          sql: "sistemas/sql_game.html",
+          cyber: "sistemas/cyber_game.html",
+          quiz: "sistemas/quiz_game.html",
+        };
+        window.location.href = paths[tipo];
       }
     </script>
   </body>

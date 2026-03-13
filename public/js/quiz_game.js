@@ -1,7 +1,8 @@
 let currentQuestionIndex = 0;
 let currentQuestions = [];
 let isAnswering = false;
-
+const CURRENT_GAME_ID = 4;
+let currentScore = 0;
 let quizTimer;
 let quizTimeLeft;
 const TIEMPO_POR_PREGUNTA = 10;
@@ -58,7 +59,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function iniciarPartida() {
   currentQuestionIndex = 0;
+  currentScore = 0;
   isAnswering = false;
+
+  actualizarMarcador();
+  obtenerHighScore();
+
   const faciles = QUIZ_DATABASE.filter((q) => q.difficulty === "facil");
   const intermedias = QUIZ_DATABASE.filter(
     (q) => q.difficulty === "intermedio",
@@ -71,6 +77,19 @@ function iniciarPartida() {
     ...barajarArray(dificiles).slice(0, 5),
   ];
   mostrarPregunta();
+}
+
+function actualizarMarcador() {
+  const elCurrent = document.getElementById("current-score");
+  if (elCurrent) elCurrent.innerText = currentScore;
+}
+
+async function obtenerHighScore() {
+  if (window.electronAPI && window.electronAPI.getHighScore) {
+    const record = await window.electronAPI.getHighScore(CURRENT_GAME_ID);
+    const elHigh = document.getElementById("high-score");
+    if (elHigh) elHigh.innerText = record || 0;
+  }
 }
 
 function mostrarPregunta() {
@@ -112,10 +131,21 @@ function evaluarRespuesta(selectedIndex, botonSeleccionado) {
 
   setTimeout(() => {
     if (esCorrecta) {
+      // Cálculo de puntos
+      const puntosBase = 100;
+      const bonoTiempo = quizTimeLeft * 10;
+      currentScore += puntosBase + bonoTiempo;
+
+      actualizarMarcador();
       playSound(sfxCorrect);
+
+      // --- CAMBIO AQUÍ: Agregamos las clases visuales y el salto de nivel ---
       botonSeleccionado.classList.remove("seleccionado");
       botonSeleccionado.classList.add("correcta");
-      setTimeout(avanzarNivel, 1500);
+
+      setTimeout(() => {
+        avanzarNivel(); // <--- Esta es la llamada que faltaba para que el juego siga
+      }, 1500);
     } else {
       playSound(sfxWrong);
       botonSeleccionado.classList.remove("seleccionado");
@@ -171,20 +201,19 @@ function playSound(audioEl) {
   } catch (e) {}
 }
 function gameOver() {
-  // Limpiamos el timer por seguridad
   clearInterval(quizTimer);
-
+  if (typeof registrarPuntajeGlobal === "function") {
+    registrarPuntajeGlobal(CURRENT_GAME_ID, currentScore);
+  }
   const rangoAlcanzado = JOB_TITLES[currentQuestionIndex];
   let mensaje = "La entrevista no salió como esperábamos...";
 
-  // Mensajes dinámicos según el progreso
   if (currentQuestionIndex >= 10) {
     mensaje = "¡Increíble! Casi llegas a la cima. Eres un Senior de respeto.";
   } else if (currentQuestionIndex >= 5) {
     mensaje = "Buen intento, al menos ya no eres un Rookie.";
   }
 
-  // Inyectamos la pantalla de Game Over en el contenedor principal
   document.getElementById("juego-arena").innerHTML = `
     <div class="game-over-screen" style="text-align: center; padding: 40px;">
       <h2 style="color: #ff4d6d; font-size: 45px; text-shadow: 0 0 15px rgba(255,77,109,0.5);">ENTREVISTA FALLIDA</h2>
@@ -200,6 +229,9 @@ function gameOver() {
 function pantallaVictoria() {
   clearInterval(quizTimer);
   playSound(sfxCorrect);
+  if (typeof registrarPuntajeGlobal === "function") {
+    registrarPuntajeGlobal(CURRENT_GAME_ID, currentScore);
+  }
 
   document.getElementById("juego-arena").innerHTML = `
     <div class="victory-screen" style="text-align: center; padding: 40px;">

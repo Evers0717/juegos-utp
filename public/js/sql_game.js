@@ -1,8 +1,10 @@
 // js/sql_game.js
 
 let currentLevelIdx = 0;
+const CURRENT_GAME_ID = 2;
 let lives = 3;
 let draggedBlock = null;
+let currentScore = 0;
 const sfxSuccess = new Audio("../../assets/audio/correctSound.mp3");
 const sfxError = new Audio("../../assets/audio/errorSound.mp3");
 // ==========================================
@@ -11,15 +13,28 @@ const sfxError = new Audio("../../assets/audio/errorSound.mp3");
 document.addEventListener("DOMContentLoaded", () => {
   setupDragAndDrop();
   loadLevel(currentLevelIdx);
+  obtenerHighScore();
 });
 
+async function obtenerHighScore() {
+  if (window.electronAPI && window.electronAPI.getHighScore) {
+    const record = await window.electronAPI.getHighScore(CURRENT_GAME_ID);
+    document.getElementById("high-score").innerText = record || 0;
+  }
+}
+
+function actualizarMarcador() {
+  currentScore = currentLevelIdx * 100;
+  document.getElementById("current-score").innerText = currentScore;
+}
 // ==========================================
 // LÓGICA DE NIVELES
 // ==========================================
 function loadLevel(index) {
   if (index >= SQL_LEVELS.length) {
+    const scoreFinal = finalizarJuegoSQL();
     printTerminal(
-      "🏆 ¡FELICIDADES! Has completado todos los retos de Data Engineering.",
+      `🏆 ¡FELICIDADES! Has completado todos los retos. Score: ${scoreFinal}`,
       "#00c853",
     );
     return;
@@ -152,13 +167,11 @@ function checkQuery() {
     : userQuery === expectedQueries;
 
   if (isCorrect) {
-    // ✅ ÉXITO
     playSound(sfxSuccess);
-    printTerminal(
-      "✅ ¡CONSULTA EXITOSA! Avanzando al siguiente nivel...",
-      "#00c853",
-    );
     currentLevelIdx++;
+    actualizarMarcador();
+
+    printTerminal("✅ ¡CONSULTA EXITOSA!", "#00c853");
     setTimeout(() => loadLevel(currentLevelIdx), 1500);
   } else {
     // ❌ FALLO
@@ -177,6 +190,7 @@ function checkQuery() {
     );
 
     if (lives <= 0) {
+      manejarGameOverSQL();
       printTerminal("💀 GAME OVER. Has perdido todas tus vidas.", "#ff4d6d");
     }
   }
@@ -206,5 +220,25 @@ function playSound(audioElement) {
     audioElement.play().catch((e) => console.warn("Audio bloqueado:", e));
   } catch (e) {
     console.error("Error al reproducir audio:", e);
+  }
+}
+
+function finalizarJuegoSQL() {
+  const puntosPorNivel = 100;
+  const bonoVidas = lives * 50;
+  const puntajeTotal = currentLevelIdx * puntosPorNivel + bonoVidas;
+
+  if (typeof registrarPuntajeGlobal === "function") {
+    registrarPuntajeGlobal(CURRENT_GAME_ID, puntajeTotal);
+  }
+
+  return puntajeTotal;
+}
+
+function manejarGameOverSQL() {
+  const puntajeConsolacion = currentLevelIdx * 50;
+
+  if (typeof registrarPuntajeGlobal === "function") {
+    registrarPuntajeGlobal(CURRENT_GAME_ID, puntajeConsolacion);
   }
 }

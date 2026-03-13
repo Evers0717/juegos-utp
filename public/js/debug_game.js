@@ -4,6 +4,9 @@
 let gameChallenges = [];
 let currentChallengeIdx = 0;
 let lives = 3;
+const CURRENT_GAME_ID = 1;
+let currentScore = 0;
+const PUNTOS_POR_BUG = 100;
 let isProcessing = false;
 
 const sfxCorrect = new Audio("../../assets/audio/correctSound.mp3");
@@ -15,8 +18,9 @@ document.addEventListener("DOMContentLoaded", () => {
 function prepararPartida() {
   lives = 3;
   currentChallengeIdx = 0;
-
-  // 1. Barajar todos los retos de la base de datos y elegir 5
+  currentScore = 0;
+  actualizarMarcador();
+  obtenerHighScore();
   gameChallenges = [...DEBUG_CHALLENGES]
     .sort(() => Math.random() - 0.5)
     .slice(0, 5);
@@ -86,11 +90,12 @@ function checkLine(clickedLine, element) {
   if (clickedLine === challenge.errorLine) {
     playSound(sfxCorrect);
     element.classList.add("line-success");
-    // Mostramos éxito pero sin revelar el nombre técnico del error de inmediato
-    printTerminal(
-      `✅ ¡SISTEMA REPARADO! El módulo funciona correctamente ahora.`,
-      "#00c853",
-    );
+
+    // SUMAR PUNTOS
+    currentScore += PUNTOS_POR_BUG;
+    actualizarMarcador();
+
+    printTerminal(`✅ ¡SISTEMA REPARADO! Módulo optimizado.`, "#00c853");
 
     setTimeout(() => {
       currentChallengeIdx++;
@@ -156,25 +161,51 @@ function escapeHTML(str) {
 }
 
 function victory() {
+  const bonoVidas = lives * 50;
+  const scoreFinal = currentScore + bonoVidas;
+
+  if (typeof registrarPuntajeGlobal === "function") {
+    registrarPuntajeGlobal(CURRENT_GAME_ID, scoreFinal);
+  }
+
   document.getElementById("code-display").innerHTML = `
     <div style="text-align:center; padding-top:50px; color:#00c853;">
         <h2 style="font-size: 40px; text-shadow: 0 0 20px rgba(0,200,83,0.4);">¡SISTEMA DEPURADO!</h2>
         <p>Has resuelto los 5 desafíos con éxito.</p>
+        <p style="color: #ffd600; font-size: 24px; font-family: monospace;">TOTAL SCORE: ${scoreFinal}</p>
         <button class="btn-cyber success" onclick="location.reload()" style="margin-top:20px; font-size:16px;">
-            INICIAR_NUEVO_ESCANEO
+          INICIAR_NUEVO_ESCANEO
         </button>
     </div>
   `;
 }
 
 function gameOver() {
+  if (typeof registrarPuntajeGlobal === "function") {
+    registrarPuntajeGlobal(CURRENT_GAME_ID, currentScore);
+  }
+
   document.getElementById("code-display").innerHTML = `
     <div style="text-align:center; padding-top:50px; color:#ff4d6d;">
         <h2 style="font-size: 40px; text-shadow: 0 0 20px rgba(255,77,109,0.4);">SISTEMA COMPROMETIDO</h2>
-        <p>Demasiados errores de diagnóstico. Kernel Panic.</p>
+        <p>Kernel Panic: Demasiados errores de diagnóstico.</p>
+        <p style="color: #aaa;">Puntaje final: ${currentScore}</p>
         <button class="btn-cyber" onclick="location.reload()" style="margin-top:20px; font-size:16px; border-color:#ff4d6d; color:#ff4d6d;">
-            REINICIAR_TERMINAL
+          REINICIAR_TERMINAL
         </button>
     </div>
   `;
+}
+
+function actualizarMarcador() {
+  const elCurrent = document.getElementById("current-score");
+  if (elCurrent) elCurrent.innerText = currentScore;
+}
+
+async function obtenerHighScore() {
+  if (window.electronAPI && window.electronAPI.getHighScore) {
+    const record = await window.electronAPI.getHighScore(CURRENT_GAME_ID);
+    const elHigh = document.getElementById("high-score");
+    if (elHigh) elHigh.innerText = record || 0;
+  }
 }

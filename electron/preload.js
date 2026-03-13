@@ -1,5 +1,6 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer } = require("electron");
 
-contextBridge.exposeInMainWorld('electronAPI', {
-  insertScore: (data) => ipcRenderer.send('insert-score', data)
+contextBridge.exposeInMainWorld("electronAPI", {
+  sendScore: (data) => ipcRenderer.send("save-score", data),
+  getHighScore: (gameId) => ipcRenderer.invoke("get-high-score", gameId),
 });

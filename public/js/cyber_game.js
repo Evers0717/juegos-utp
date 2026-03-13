@@ -1,6 +1,6 @@
 const sfxSuccess = new Audio("../../assets/audio/correctSound.mp3");
 const sfxError = new Audio("../../assets/audio/errorSound.mp3");
-
+const CURRENT_GAME_ID = 3;
 // Variables Globales del Estado del Juego
 let score = 0;
 let lives = 3;
@@ -159,6 +159,9 @@ function triggerFlash(className) {
 }
 
 function gameOver() {
+  if (typeof registrarPuntajeGlobal === "function") {
+    registrarPuntajeGlobal(CURRENT_GAME_ID, score);
+  }
   elTimerRing.style.background = `conic-gradient(#ff4d6d 100%, transparent 0)`;
   elTimerText.innerText = "FAIL";
   elPayload.innerHTML = `<span style="color:#ff4d6d; font-size: 18px;">🔥 SYSTEM COMPROMISED 🔥</span><br><br>Puntuación Final: ${score}<br>Amenazas Detenidas: ${streak}<br><br><button class="play-btn" onclick="location.reload()">REINICIAR SISTEMA</button>`;

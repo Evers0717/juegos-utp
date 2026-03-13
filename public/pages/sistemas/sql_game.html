@@ -14,6 +14,30 @@
         overflow: hidden;
       }
 
+      .score-panel {
+        display: flex;
+        justify-content: space-around;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid rgba(0, 188, 212, 0.3);
+      }
+      .score-item {
+        text-align: center;
+        margin: 0 10px;
+      }
+      .label {
+        font-size: 10px;
+        color: #888;
+        text-transform: uppercase;
+        display: block;
+      }
+      .value {
+        font-size: 20px;
+        font-weight: bold;
+        color: #ffd600;
+        font-family: "Consolas", monospace;
+      }
+
       .sql-layout {
         display: grid;
         grid-template-columns: 1fr 350px;
@@ -150,6 +174,16 @@
               </h3>
               <p id="task-text">...</p>
             </div>
+            <div class="score-panel glass">
+              <div class="score-item">
+                <span class="label">Puntaje Actual:</span>
+                <span id="current-score" class="value">0</span>
+              </div>
+              <div class="score-item">
+                <span class="label">Récord Local:</span>
+                <span id="high-score" class="value">---</span>
+              </div>
+            </div>
             <div class="lives" id="lives-display">❤️❤️❤️</div>
           </div>
 
@@ -205,7 +239,7 @@
         </div>
       </main>
     </div>
-
+    <script src="../../js/utils.js"></script>
     <script src="../../js/sql_levels.js"></script>
     <script src="../../js/sql_game.js"></script>
   </body>
